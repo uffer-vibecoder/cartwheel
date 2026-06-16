@@ -15,10 +15,16 @@
 // "house ad" renders so the layout is real and revenue-ready.
 // ----------------------------------------------------------------------------
 
-export type AdNetwork = "house" | "ethicalads";
+export type AdNetwork = "house" | "ethicalads" | "adsense";
+
+const adsensePublisher = import.meta.env.VITE_ADSENSE_PUBLISHER as string | undefined;
+const adsenseSlot = import.meta.env.VITE_ADSENSE_SLOT as string | undefined;
 
 export const adConfig = {
-  network: "house" as AdNetwork,
+  // Auto-selects AdSense when its keys are present (.env), else the house ad.
+  network: (adsensePublisher && adsenseSlot ? "adsense" : "house") as AdNetwork,
+  adsensePublisher: adsensePublisher ?? "", // "ca-pub-XXXXXXXXXXXXXXXX"
+  adsenseSlot: adsenseSlot ?? "", // the ad-unit slot id
   ethicalAdsPublisher: "", // e.g. "your-site-id" once you sign up
 };
 

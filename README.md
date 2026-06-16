@@ -1,4 +1,4 @@
-# 🛒 Cartwheel — an American dopamine store
+# 🛒 whim — an American dopamine store
 
 A playful, colorful **"dopamine website"**: a fake e-commerce store where you browse,
 add to cart, check out, and watch a live delivery truck crawl toward your door — except
@@ -8,7 +8,10 @@ the bill.
 Inspired by the Korean "도파민 사이트" (dopamine site) trend, reimagined with American
 products and an Amazon/DoorDash-style delivery tracker.
 
-**🔗 Live:** https://uffer-vibecoder.github.io/cartwheel/
+**🔗 Live:** https://uffer-vibecoder.github.io/whim/
+
+**Accounts + ads:** local-account mode and a house-ad slot work out of the box.
+To turn on real Supabase accounts and Google AdSense, see [docs/GO-LIVE.md](docs/GO-LIVE.md).
 
 ## The loop
 

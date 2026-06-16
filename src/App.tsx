@@ -1,6 +1,7 @@
 import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "./store/CartContext";
+import { useAuth } from "./store/AuthContext";
 import { isSoundOn, playCoin, setSound } from "./lib/dopamine";
 import AdSlot from "./components/AdSlot";
 import Storefront from "./pages/Storefront";
@@ -8,9 +9,11 @@ import ProductPage from "./pages/Product";
 import CartPage from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Tracking from "./pages/Tracking";
+import Account from "./pages/Account";
 
 function Header() {
   const { itemCount, savedTotal } = useCart();
+  const { signedIn, profile } = useAuth();
   const [sound, setS] = useState(isSoundOn());
   const navigate = useNavigate();
 
@@ -68,6 +71,13 @@ function Header() {
       >
         {sound ? "🔊" : "🔇"}
       </button>
+      <button
+        className="icon-btn"
+        title={signedIn ? `Signed in as ${profile?.display_name}` : "Sign in"}
+        onClick={() => navigate("/account")}
+      >
+        {signedIn ? profile?.avatar_emoji ?? "🙂" : "👤"}
+      </button>
       <button id="cart-target" className="pill cart-pill" onClick={() => navigate("/cart")}>
         🛍️ Cart <span ref={countRef} className="count">{itemCount}</span>
       </button>
@@ -87,6 +97,7 @@ export default function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/tracking" element={<Tracking />} />
+          <Route path="/account" element={<Account />} />
         </Routes>
       </main>
       <footer className="footer">

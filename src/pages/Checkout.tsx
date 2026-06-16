@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../store/CartContext";
+import { useAuth } from "../store/AuthContext";
 import { bigCelebration, playChaChing, playConfirm } from "../lib/dopamine";
 import {
   MAX_WINDOW,
@@ -23,6 +24,7 @@ export type ActiveOrder = {
 
 export default function Checkout() {
   const { lines, subtotal, checkout } = useCart();
+  const { recordDaydream } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
@@ -87,6 +89,13 @@ export default function Checkout() {
     } catch {
       /* ignore */
     }
+    // Record to the account's daydream history (no-op if signed out).
+    void recordDaydream({
+      total: subtotal,
+      window_seconds: windowSeconds,
+      surprise,
+      items: order.items,
+    });
     checkout(subtotal);
     window.setTimeout(() => navigate("/tracking"), 700);
   }
