@@ -55,6 +55,7 @@ mobile-first, also great on desktop. Responsive.
 - A "Drops" screen — limited new-arrival releases with a countdown and a friendly "notify me"
 
 **Constraints / must-haves:**
+- No visible real-world brands/logos in product imagery — keep it brand-neutral and original.
 - Always make it obvious this is a parody: "Sponsored" labels, "$0 charged," "nothing ships."
 - Keep the one ad slot tasteful, contextual, and visually distinct from products (never disguised).
 - Accessibility: legible contrast, large tap targets, reduced-motion friendly.

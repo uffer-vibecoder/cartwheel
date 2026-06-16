@@ -3,8 +3,8 @@ import type { Product } from "../types";
 // Curated, verified Unsplash photo ids per product (real product photography).
 const UNSPLASH: Record<string, string> = {
   "stanley-tumbler": "photo-1602143407151-7111542de6e8",
-  "air-fryer": "photo-1695089028114-ce28248f0ab9",
-  sneakers: "photo-1597350584914-55bb62285896",
+  "air-fryer": "photo-1774074645537-f72f70d40d12",
+  sneakers: "photo-1560769629-975ec94e6a86",
   "mech-keyboard": "photo-1547394765-185e1e68f34e",
   "robot-vacuum": "photo-1653990480360-31a12ce9723e",
   "weighted-blanket": "photo-1564019472231-4586c552dc27",
@@ -12,9 +12,9 @@ const UNSPLASH: Record<string, string> = {
   "led-strip": "photo-1572249930263-64fc5bbdb14b",
   polaroid: "photo-1516962126636-27ad087061cc",
   plant: "photo-1626929252164-27c26d107b00",
-  headphones: "photo-1545127398-14699f92334b",
+  headphones: "photo-1546435770-a3e426bf472b",
   "snack-box": "photo-1732007692530-8cea2e11c10c",
-  "thrift-denim": "photo-1611312449408-fcece27cdbb7",
+  "thrift-denim": "photo-1543076447-215ad9ba6923",
   "thrift-vinyl": "photo-1488841714725-bb4c32d1ac94",
   "thrift-lamp": "photo-1573676386604-78f8ed228e2b",
   "thrift-tee": "photo-1651761179569-4ba2aa054997",

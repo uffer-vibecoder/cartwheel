@@ -93,10 +93,7 @@ button {
 }
 
 .logo b {
-  background: linear-gradient(90deg, var(--pink), var(--purple));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--pink);
 }
 
 .header .spacer {
@@ -696,26 +693,33 @@ button {
   text-align: left;
 }
 .ad-label {
-  display: inline-block;
+  position: absolute;
+  top: -10px;
+  left: 14px;
+  z-index: 2;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ink-soft);
-  background: #fff;
-  border: 1.5px solid var(--line);
-  padding: 2px 8px;
+  color: #fff;
+  background: var(--orange);
+  padding: 4px 10px;
   border-radius: 999px;
-  margin-bottom: 6px;
 }
 .ad-card {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: #fff;
-  border: 2px dashed var(--line);
+  background: repeating-linear-gradient(
+    135deg,
+    #fff,
+    #fff 14px,
+    #fff3ec 14px,
+    #fff3ec 28px
+  );
+  border: 2px dashed #ffb38a;
   border-radius: var(--radius-sm);
-  padding: 12px 14px;
+  padding: 16px 14px 14px;
   box-shadow: var(--shadow-sm);
   transition: transform 0.15s ease;
 }
@@ -749,7 +753,10 @@ button {
 .ad-cta {
   font-weight: 800;
   font-size: 13px;
-  color: var(--purple);
+  color: var(--orange);
+  border: 2px solid var(--orange);
+  border-radius: 999px;
+  padding: 6px 12px;
   white-space: nowrap;
 }
 

@@ -28,7 +28,7 @@ export default function AdSlot({ seed = 0 }: { seed?: number }) {
   if (adConfig.network === "ethicalads" && adConfig.ethicalAdsPublisher) {
     return (
       <aside className="ad" aria-label="Advertisement">
-        <span className="ad-label">Sponsored</span>
+        <span className="ad-label">Sponsored · Ad</span>
         <div ref={ref} />
       </aside>
     );

@@ -4,6 +4,10 @@ An American "dopamine store": all the shopping, none of the spending. This file 
 what's shipped and what's next. Guiding principle: **delight without harm** — we simulate
 the *thrill* of buying, never nudge people toward real overspending.
 
+## 📐 Content rules
+- **No visible brands in product photos.** Imagery should be brand-neutral — no logos,
+  wordmarks, or recognizable trademarked designs. Keeps it parody-safe and original.
+
 ---
 
 ## ✅ Shipped
@@ -49,6 +53,9 @@ the *thrill* of buying, never nudge people toward real overspending.
 ---
 
 ## 💡 Backlog / ideas
+- **Humorous one-star reviews** — mix in a few funny, over-dramatic 1★ reviews on product
+  pages alongside the glowing ones (e.g. "arrived imaginary, 0 stars — wait, that's the
+  point... 1 star for making me feel feelings"). Keeps the parody honest and funnier.
 - Wishlist / "saved" tab and shareable hauls
 - Seasonal collections & themed drops
 - Daily "free dopamine" streaks (browse, don't buy)

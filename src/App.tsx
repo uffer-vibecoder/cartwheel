@@ -48,7 +48,7 @@ function Header() {
       <Link to="/" className="logo">
         <span className="mark">🛒</span>
         <span>
-          Cart<b>wheel</b>
+          whim<b>.</b>
         </span>
       </Link>
       <div className="spacer" />
@@ -92,10 +92,10 @@ export default function App() {
       <footer className="footer">
         <AdSlot seed={1} />
         <div style={{ marginTop: 18 }}>
-          Cartwheel is a <b>dopamine store</b> — a parody. Nothing is for sale, no card is
+          whim is a <b>dopamine store</b> — a joyful parody. Nothing is for sale, no card is
           charged, nothing ships. 💸
         </div>
-        <div>All the thrill of the haul, none of the bill. Made for fun.</div>
+        <div>Treat yourself to the <i>idea</i> of it. All the thrill of the haul, none of the bill.</div>
       </footer>
     </div>
   );
