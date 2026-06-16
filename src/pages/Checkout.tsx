@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../store/CartContext";
-import { bigCelebration, playChaChing } from "../lib/dopamine";
+import { bigCelebration, playChaChing, playConfirm } from "../lib/dopamine";
+import {
+  MAX_WINDOW,
+  MIN_WINDOW,
+  formatWindow,
+  randomWindow,
+  windowPresets,
+} from "../lib/time";
 
 export type ActiveOrder = {
   name: string;
@@ -10,6 +17,8 @@ export type ActiveOrder = {
   items: { emoji: string; name: string }[];
   total: number;
   placedAt: number;
+  windowSeconds: number;
+  surprise: boolean;
 };
 
 export default function Checkout() {
@@ -23,6 +32,20 @@ export default function Checkout() {
     card: "",
   });
   const [placing, setPlacing] = useState(false);
+  const [windowSeconds, setWindowSeconds] = useState(30);
+  const [surprise, setSurprise] = useState(false);
+
+  function pickWindow(secs: number) {
+    setWindowSeconds(secs);
+    setSurprise(false);
+    playConfirm();
+  }
+
+  function surpriseMe() {
+    setWindowSeconds(randomWindow(Math.random()));
+    setSurprise(true);
+    playConfirm();
+  }
 
   if (lines.length === 0 && !placing) {
     return (
@@ -56,6 +79,8 @@ export default function Checkout() {
       items: lines.map((l) => ({ emoji: l.product.emoji, name: l.product.name })),
       total: subtotal,
       placedAt: Date.now(),
+      windowSeconds,
+      surprise,
     };
     try {
       sessionStorage.setItem("cartwheel.order", JSON.stringify(order));
@@ -112,7 +137,53 @@ export default function Checkout() {
             </label>
           </div>
 
-          <h3 style={{ margin: "8px 0 14px" }}>💳 Payment</h3>
+          <h3 style={{ margin: "20px 0 12px" }}>⏱️ Delivery window</h3>
+          <div className="dw-presets">
+            {windowPresets.map((p) => (
+              <button
+                key={p.seconds}
+                type="button"
+                className={`chip ${!surprise && windowSeconds === p.seconds ? "active" : ""}`}
+                onClick={() => pickWindow(p.seconds)}
+              >
+                {p.emoji} {p.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={`chip dice ${surprise ? "active" : ""}`}
+              onClick={surpriseMe}
+            >
+              🎲 Surprise me
+            </button>
+          </div>
+
+          <div className="dw-slider">
+            <input
+              type="range"
+              min={MIN_WINDOW}
+              max={MAX_WINDOW}
+              step={5}
+              value={windowSeconds}
+              onChange={(e) => {
+                setWindowSeconds(Number(e.target.value));
+                setSurprise(false);
+              }}
+              aria-label="Custom delivery window"
+            />
+            <div className="dw-readout">
+              <span className="dw-value">{formatWindow(windowSeconds)}</span>
+              <span className="dw-sub">
+                {surprise
+                  ? "🎲 a mystery window — you won't know till checkout"
+                  : windowSeconds <= 45
+                  ? "watch it arrive in real time"
+                  : "the tracker fast-forwards so you're not actually waiting"}
+              </span>
+            </div>
+          </div>
+
+          <h3 style={{ margin: "20px 0 12px" }}>💳 Payment</h3>
           <label className="field">
             <span>Card number (don't worry, it goes nowhere)</span>
             <input

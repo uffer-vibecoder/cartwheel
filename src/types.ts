@@ -11,6 +11,8 @@ export type Product = {
   bg: string; // gradient for the product tile
   blurb: string;
   perks: string[];
+  secondhand?: boolean; // a one-of-a-kind thrifted find
+  condition?: string; // flavor text for thrifted items, e.g. "Gently loved"
 };
 
 export type CartLine = {

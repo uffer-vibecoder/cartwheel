@@ -54,6 +54,11 @@ export default function ProductPage() {
           <div className="tagline" style={{ fontSize: 16 }}>
             {product.tagline}
           </div>
+          {product.secondhand && (
+            <div className="dw-chip" style={{ marginTop: 10 }}>
+              ♻️ Thrifted{product.condition ? ` · ${product.condition}` : ""}
+            </div>
+          )}
 
           <div className="price-row" style={{ margin: "16px 0" }}>
             <span className="price" style={{ fontSize: 34 }}>

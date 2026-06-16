@@ -2,9 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import DeliveryMap from "../components/DeliveryMap";
 import { bigCelebration, playArrived } from "../lib/dopamine";
+import { formatEta, formatWindow, realDurationFor } from "../lib/time";
 import type { ActiveOrder } from "./Checkout";
-
-const DURATION = 22; // seconds, base speed
 
 const STEPS = [
   { at: 0, label: "Order placed", sub: "Your $0 went through. Nice.", icon: "✅" },
@@ -32,12 +31,13 @@ export default function Tracking() {
 
   useEffect(() => {
     if (!order) return;
+    const duration = realDurationFor(order.windowSeconds);
     let raf = 0;
     let last = performance.now();
     const tick = (now: number) => {
       const dt = (now - last) / 1000;
       last = now;
-      progRef.current = Math.min(1, progRef.current + (dt / DURATION) * speedRef.current);
+      progRef.current = Math.min(1, progRef.current + (dt / duration) * speedRef.current);
       setProgress(progRef.current);
       if (progRef.current >= 1) {
         if (!celebrated.current) {
@@ -70,10 +70,8 @@ export default function Tracking() {
 
   const delivered = progress >= 1;
   const currentIdx = STEPS.reduce((acc, s, i) => (progress >= s.at ? i : acc), 0);
-  const remaining = Math.max(0, Math.ceil((1 - progress) * DURATION) / speedRef.current);
-  const etaText = delivered
-    ? "Delivered 🎉"
-    : `Arriving in ${Math.ceil(remaining)}s`;
+  const fictionalRemaining = order.windowSeconds * (1 - progress);
+  const etaText = delivered ? "Delivered 🎉" : formatEta(fictionalRemaining);
 
   return (
     <>
@@ -91,6 +89,11 @@ export default function Tracking() {
           </div>
           <div style={{ fontWeight: 700, color: "var(--ink-soft)", marginTop: 4 }}>
             To {order.name} · {order.address}, {order.city}
+          </div>
+          <div className="dw-chip">
+            {order.surprise ? "🎲 You rolled a" : "⏱️ Your window:"}{" "}
+            <b>{formatWindow(order.windowSeconds)}</b>
+            {order.surprise && " window"}
           </div>
 
           <div className="steps">

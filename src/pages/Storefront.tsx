@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { products } from "../data/products";
 import ProductCard from "../components/ProductCard";
+import AdSlot from "../components/AdSlot";
 
 const floaties = [
   { e: "🛍️", top: "12%", left: "70%", d: "0s" },
@@ -52,6 +53,8 @@ export default function Storefront() {
           </button>
         ))}
       </div>
+
+      <AdSlot seed={0} />
 
       <div className="grid">
         {shown.map((p) => (

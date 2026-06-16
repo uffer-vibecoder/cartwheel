@@ -1,7 +1,8 @@
-import { Link, Route, Routes, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "./store/CartContext";
-import { isSoundOn, setSound } from "./lib/dopamine";
+import { isSoundOn, playCoin, setSound } from "./lib/dopamine";
+import AdSlot from "./components/AdSlot";
 import Storefront from "./pages/Storefront";
 import ProductPage from "./pages/Product";
 import CartPage from "./pages/Cart";
@@ -13,6 +14,35 @@ function Header() {
   const [sound, setS] = useState(isSoundOn());
   const navigate = useNavigate();
 
+  // Bump the cart badge whenever the item count changes.
+  const countRef = useRef<HTMLSpanElement>(null);
+  const prevCount = useRef(itemCount);
+  useEffect(() => {
+    if (itemCount !== prevCount.current && countRef.current) {
+      const el = countRef.current;
+      el.classList.remove("pulse-num");
+      void el.offsetWidth;
+      el.classList.add("pulse-num");
+    }
+    prevCount.current = itemCount;
+  }, [itemCount]);
+
+  // Chime + bump the savings tally when it grows.
+  const savedRef = useRef<HTMLSpanElement>(null);
+  const prevSaved = useRef(savedTotal);
+  useEffect(() => {
+    if (savedTotal > prevSaved.current) {
+      playCoin();
+      const el = savedRef.current;
+      if (el) {
+        el.classList.remove("pulse-num");
+        void el.offsetWidth;
+        el.classList.add("pulse-num");
+      }
+    }
+    prevSaved.current = savedTotal;
+  }, [savedTotal]);
+
   return (
     <header className="header">
       <Link to="/" className="logo">
@@ -23,7 +53,7 @@ function Header() {
       </Link>
       <div className="spacer" />
       {savedTotal > 0 && (
-        <span className="pill saved" title="Money you didn't actually spend">
+        <span ref={savedRef} className="pill saved" title="Money you didn't actually spend">
           🪙 ${savedTotal.toLocaleString()} saved
         </span>
       )}
@@ -38,26 +68,30 @@ function Header() {
       >
         {sound ? "🔊" : "🔇"}
       </button>
-      <button className="pill cart-pill" onClick={() => navigate("/cart")}>
-        🛍️ Cart <span className="count">{itemCount}</span>
+      <button id="cart-target" className="pill cart-pill" onClick={() => navigate("/cart")}>
+        🛍️ Cart <span ref={countRef} className="count">{itemCount}</span>
       </button>
     </header>
   );
 }
 
 export default function App() {
+  const location = useLocation();
   return (
     <div className="app">
       <Header />
-      <Routes>
-        <Route path="/" element={<Storefront />} />
-        <Route path="/p/:id" element={<ProductPage />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/tracking" element={<Tracking />} />
-      </Routes>
+      <main key={location.pathname} className="page">
+        <Routes location={location}>
+          <Route path="/" element={<Storefront />} />
+          <Route path="/p/:id" element={<ProductPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/tracking" element={<Tracking />} />
+        </Routes>
+      </main>
       <footer className="footer">
-        <div>
+        <AdSlot seed={1} />
+        <div style={{ marginTop: 18 }}>
           Cartwheel is a <b>dopamine store</b> — a parody. Nothing is for sale, no card is
           charged, nothing ships. 💸
         </div>

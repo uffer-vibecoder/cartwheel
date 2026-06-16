@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { Product } from "../types";
 import { useCart } from "../store/CartContext";
-import { playPop, popConfetti } from "../lib/dopamine";
+import { flyToCart, playPop, popConfetti } from "../lib/dopamine";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { add } = useCart();
@@ -17,10 +17,10 @@ export default function ProductCard({ product }: { product: Product }) {
     add(product);
     playPop();
     const r = e.currentTarget.getBoundingClientRect();
-    popConfetti(
-      (r.left + r.width / 2) / window.innerWidth,
-      (r.top + r.height / 2) / window.innerHeight
-    );
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    popConfetti(cx / window.innerWidth, cy / window.innerHeight);
+    flyToCart(product.emoji, cx, cy);
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1100);
   }
@@ -28,7 +28,11 @@ export default function ProductCard({ product }: { product: Product }) {
   return (
     <Link to={`/p/${product.id}`} className="card">
       <div className="thumb" style={{ background: product.bg }}>
-        {discount > 0 && <span className="deal">-{discount}%</span>}
+        {product.secondhand ? (
+          <span className="deal thrift">♻️ Thrifted</span>
+        ) : (
+          discount > 0 && <span className="deal">-{discount}%</span>
+        )}
         <span className="heart">🤍</span>
         <span>{product.emoji}</span>
       </div>
