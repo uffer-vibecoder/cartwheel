@@ -1,35 +1,59 @@
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "../store/CartContext";
 
-// A theatrical-but-grounded "worldwide savings" meter. The base climbs from a fixed
-// anchor in real time (so it never resets on refresh and always feels alive), and the
-// visitor's own "money saved by not buying" is folded in on top.
-const ANCHOR_MS = Date.UTC(2026, 5, 1); // Jun 1, 2026
-const ANCHOR_VALUE = 4_800_000;
-const RATE = 9.0; // dollars/second the world "saves" by not checking out
+// "Saved worldwide" meter. On a visitor's first load it seeds a starting value in
+// the low hundreds (persisted), then climbs gently in real time and folds in their
+// own "money saved by not buying". Calm and readable — not a slot machine.
+const SEED_KEY = "whim.global.v1";
+const RATE = 0.4; // dollars/second — gentle, readable tick
 
-function computeGlobal(userSaved: number): number {
-  const secs = Math.max(0, (Date.now() - ANCHOR_MS) / 1000);
-  return ANCHOR_VALUE + secs * RATE + userSaved;
+type Seed = { base: number; ts: number };
+
+function loadSeed(): Seed {
+  try {
+    const raw = localStorage.getItem(SEED_KEY);
+    if (raw) {
+      const s = JSON.parse(raw) as Seed;
+      if (typeof s.base === "number" && typeof s.ts === "number") return s;
+    }
+  } catch {
+    /* ignore */
+  }
+  // First visit: start somewhere in the low hundreds.
+  const s: Seed = { base: 180 + Math.floor(Math.random() * 600), ts: Date.now() };
+  try {
+    localStorage.setItem(SEED_KEY, JSON.stringify(s));
+  } catch {
+    /* ignore */
+  }
+  return s;
+}
+
+function compute(seed: Seed, userSaved: number): number {
+  const secs = Math.max(0, (Date.now() - seed.ts) / 1000);
+  return seed.base + secs * RATE + userSaved;
 }
 
 export default function GlobalSaver() {
   const { savedTotal } = useCart();
-  const [val, setVal] = useState(() => computeGlobal(savedTotal));
+  const seedRef = useRef<Seed | null>(null);
+  if (!seedRef.current) seedRef.current = loadSeed();
+  const [val, setVal] = useState(() => compute(seedRef.current!, savedTotal));
   const savedRef = useRef(savedTotal);
   savedRef.current = savedTotal;
 
   useEffect(() => {
+    const seed = seedRef.current!;
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (reduce) {
-      const tick = () => setVal(computeGlobal(savedRef.current));
+      const tick = () => setVal(compute(seed, savedRef.current));
       tick();
-      const timer = window.setInterval(tick, 2000);
+      const timer = window.setInterval(tick, 3000);
       return () => clearInterval(timer);
     }
     let raf = 0;
     const loop = () => {
-      setVal(computeGlobal(savedRef.current));
+      setVal(compute(seed, savedRef.current));
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
