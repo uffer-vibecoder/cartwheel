@@ -1,11 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { adConfig, houseAds } from "../data/ads";
 
 /**
- * A single, clearly-labeled sponsored slot. Renders a real network (Google
- * AdSense or EthicalAds) when configured, otherwise a rotating in-house "house
- * ad". Deliberately small and visually distinct from products — never disguised.
- * See src/data/ads.ts for the ethics note and setup.
+ * A single, clearly-labeled sponsored slot. Renders Google AdSense when configured
+ * AND it actually has an ad to show; otherwise gracefully falls back to a rotating
+ * in-house "house ad" (so the slot is never an empty box — e.g. before AdSense
+ * approval, or when a request goes unfilled). Deliberately small and visually
+ * distinct from products. See src/data/ads.ts for the ethics note.
  *
  * `seed` just picks which house ad shows, so different placements aren't identical.
  */
@@ -26,73 +27,95 @@ function loadAdsenseScript(publisher: string) {
   document.head.appendChild(s);
 }
 
-export default function AdSlot({ seed = 0 }: { seed?: number }) {
-  const eaRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (adConfig.network === "adsense" && adConfig.adsensePublisher) {
-      loadAdsenseScript(adConfig.adsensePublisher);
-      try {
-        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
-      } catch {
-        /* AdSense not ready yet */
-      }
-    }
-    if (adConfig.network === "ethicalads" && adConfig.ethicalAdsPublisher && eaRef.current) {
-      eaRef.current.innerHTML = "";
-      const el = document.createElement("div");
-      el.className = "horizontal";
-      el.setAttribute("data-ea-publisher", adConfig.ethicalAdsPublisher);
-      el.setAttribute("data-ea-type", "image");
-      eaRef.current.appendChild(el);
-      (window as any).ethicalads?.load?.();
-    }
-  }, []);
-
-  // ── Google AdSense ──────────────────────────────────────────────────────
-  if (adConfig.network === "adsense" && adConfig.adsensePublisher && adConfig.adsenseSlot) {
-    return (
-      <aside className="ad" aria-label="Advertisement">
-        <span className="ad-label">Sponsored · Ad</span>
-        <div className="ad-card" style={{ display: "block", padding: "18px 14px 14px" }}>
-          <ins
-            className="adsbygoogle"
-            style={{ display: "block" }}
-            data-ad-client={adConfig.adsensePublisher}
-            data-ad-slot={adConfig.adsenseSlot}
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          />
-        </div>
-      </aside>
-    );
-  }
-
-  // ── EthicalAds ──────────────────────────────────────────────────────────
-  if (adConfig.network === "ethicalads" && adConfig.ethicalAdsPublisher) {
-    return (
-      <aside className="ad" aria-label="Advertisement">
-        <span className="ad-label">Sponsored · Ad</span>
-        <div className="ad-card" style={{ display: "block" }} ref={eaRef} />
-      </aside>
-    );
-  }
-
-  // ── In-house "house ad" (default) ───────────────────────────────────────
+function HouseAdCard({ seed }: { seed: number }) {
   const ad = houseAds[seed % houseAds.length];
   return (
-    <aside className="ad" aria-label="Sponsored message">
+    <a className="ad-card" href={ad.href} target="_blank" rel="noopener noreferrer sponsored">
+      <span className="ad-emoji" style={{ background: ad.bg }}>
+        {ad.emoji}
+      </span>
+      <span className="ad-text">
+        <strong>{ad.title}</strong>
+        <span>{ad.body}</span>
+      </span>
+      <span className="ad-cta">{ad.cta} →</span>
+    </a>
+  );
+}
+
+/** AdSense unit that falls back to the house ad if the request goes unfilled. */
+function AdSenseUnit({ seed }: { seed: number }) {
+  const insRef = useRef<HTMLModElement>(null);
+  const [fallback, setFallback] = useState(false);
+  const [filled, setFilled] = useState(false);
+
+  useEffect(() => {
+    loadAdsenseScript(adConfig.adsensePublisher);
+    try {
+      ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+    } catch {
+      /* AdSense not ready / not approved yet */
+    }
+    // Poll the unit's fill status; fall back to the house ad if it stays empty.
+    let tries = 0;
+    const iv = window.setInterval(() => {
+      const status = insRef.current?.getAttribute("data-ad-status");
+      if (status === "filled") {
+        setFilled(true);
+        window.clearInterval(iv);
+      } else if (status === "unfilled" || ++tries > 6) {
+        setFallback(true);
+        window.clearInterval(iv);
+      }
+    }, 500);
+    return () => window.clearInterval(iv);
+  }, []);
+
+  if (fallback && !filled) return <HouseAdCard seed={seed} />;
+
+  return (
+    <ins
+      ref={insRef}
+      className="adsbygoogle"
+      style={{ display: "block" }}
+      data-ad-client={adConfig.adsensePublisher}
+      data-ad-slot={adConfig.adsenseSlot}
+      data-ad-format="auto"
+      data-full-width-responsive="true"
+    />
+  );
+}
+
+function EthicalUnit() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    ref.current.innerHTML = "";
+    const el = document.createElement("div");
+    el.className = "horizontal";
+    el.setAttribute("data-ea-publisher", adConfig.ethicalAdsPublisher);
+    el.setAttribute("data-ea-type", "image");
+    ref.current.appendChild(el);
+    (window as any).ethicalads?.load?.();
+  }, []);
+  return <div className="ad-card" style={{ display: "block" }} ref={ref} />;
+}
+
+export default function AdSlot({ seed = 0 }: { seed?: number }) {
+  const isAdsense =
+    adConfig.network === "adsense" && !!adConfig.adsensePublisher && !!adConfig.adsenseSlot;
+  const isEthical = adConfig.network === "ethicalads" && !!adConfig.ethicalAdsPublisher;
+
+  return (
+    <aside className="ad" aria-label={isAdsense || isEthical ? "Advertisement" : "Sponsored message"}>
       <span className="ad-label">Sponsored · Ad</span>
-      <a className="ad-card" href={ad.href} target="_blank" rel="noopener noreferrer sponsored">
-        <span className="ad-emoji" style={{ background: ad.bg }}>
-          {ad.emoji}
-        </span>
-        <span className="ad-text">
-          <strong>{ad.title}</strong>
-          <span>{ad.body}</span>
-        </span>
-        <span className="ad-cta">{ad.cta} →</span>
-      </a>
+      {isAdsense ? (
+        <AdSenseUnit seed={seed} />
+      ) : isEthical ? (
+        <EthicalUnit />
+      ) : (
+        <HouseAdCard seed={seed} />
+      )}
     </aside>
   );
 }
