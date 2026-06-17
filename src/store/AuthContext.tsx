@@ -25,6 +25,8 @@ export type Daydream = {
   placed_at: string;
 };
 
+export type CollectedDrop = { product_id: string; collected_at: string };
+
 type AuthValue = {
   mode: "supabase" | "local";
   ready: boolean;
@@ -43,10 +45,15 @@ type AuthValue = {
   signInLocal: (name: string) => void;
   signOut: () => Promise<void>;
   recordDaydream: (d: Omit<Daydream, "id" | "placed_at">) => Promise<void>;
+  /** Limited-drop collection (collectible "caught" items). */
+  collected: CollectedDrop[];
+  collectDrop: (productId: string) => Promise<void>;
+  isCollected: (productId: string) => boolean;
 };
 
 const PROFILE_KEY = "whim.profile";
 const HISTORY_KEY = "whim.history";
+const COLLECTED_KEY = "whim.collected";
 
 const AuthContext = createContext<AuthValue | null>(null);
 
@@ -64,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [history, setHistory] = useState<Daydream[]>([]);
+  const [collected, setCollected] = useState<CollectedDrop[]>([]);
 
   // ── Supabase data loaders ────────────────────────────────────────────────
   const loadSupabaseData = useCallback(async (userId: string, email?: string) => {
@@ -87,6 +95,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .order("placed_at", { ascending: false })
       .limit(100);
     setHistory((dreams as Daydream[]) ?? []);
+    // collected_drops may not exist until the user runs the migration; tolerate it.
+    const { data: drops } = await supabase
+      .from("collected_drops")
+      .select("product_id, collected_at")
+      .order("collected_at", { ascending: false });
+    setCollected((drops as CollectedDrop[]) ?? []);
   }, []);
 
   // ── Bootstrap ─────────────────────────────────────────────────────────────
@@ -94,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (mode === "local") {
       setProfile(loadLocal<Profile | null>(PROFILE_KEY, null));
       setHistory(loadLocal<Daydream[]>(HISTORY_KEY, []));
+      setCollected(loadLocal<CollectedDrop[]>(COLLECTED_KEY, []));
       setReady(true);
       return;
     }
@@ -109,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       else {
         setProfile(null);
         setHistory([]);
+        setCollected([]);
       }
     });
     return () => sub.subscription.unsubscribe();
@@ -171,8 +187,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     setProfile(null);
+    setCollected([]);
     try {
       localStorage.removeItem(PROFILE_KEY);
+      localStorage.removeItem(COLLECTED_KEY);
     } catch {
       /* ignore */
     }
@@ -216,6 +234,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [mode, profile, history, loadSupabaseData]
   );
 
+  const collectDrop = useCallback(
+    async (productId: string) => {
+      if (!profile) return;
+      if (collected.some((c) => c.product_id === productId)) return; // already caught
+      const entry: CollectedDrop = {
+        product_id: productId,
+        collected_at: new Date().toISOString(),
+      };
+      if (mode === "supabase" && supabase && profile.id !== "local") {
+        await supabase
+          .from("collected_drops")
+          .upsert(
+            { user_id: profile.id, product_id: productId },
+            { onConflict: "user_id,product_id" }
+          );
+        setCollected((prev) => [entry, ...prev]);
+        return;
+      }
+      const next = [entry, ...collected];
+      setCollected(next);
+      try {
+        localStorage.setItem(COLLECTED_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+    },
+    [mode, profile, collected]
+  );
+
+  const isCollected = useCallback(
+    (productId: string) => collected.some((c) => c.product_id === productId),
+    [collected]
+  );
+
   const value = useMemo<AuthValue>(
     () => ({
       mode,
@@ -228,6 +280,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInLocal,
       signOut,
       recordDaydream,
+      collected,
+      collectDrop,
+      isCollected,
     }),
     [
       mode,
@@ -239,6 +294,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInLocal,
       signOut,
       recordDaydream,
+      collected,
+      collectDrop,
+      isCollected,
     ]
   );
 

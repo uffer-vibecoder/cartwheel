@@ -5,6 +5,7 @@ import { reviewsFor } from "../data/reviews";
 import { useTitle } from "../lib/useTitle";
 import LimitedCountdown from "../components/LimitedCountdown";
 import { useCart } from "../store/CartContext";
+import { useAuth } from "../store/AuthContext";
 import { playPop, popConfetti } from "../lib/dopamine";
 import ProductImage from "../components/ProductImage";
 
@@ -12,6 +13,7 @@ export default function ProductPage() {
   const { id } = useParams();
   const product = id ? productById(id) : undefined;
   const { add } = useCart();
+  const { signedIn, isCollected, collectDrop } = useAuth();
   const navigate = useNavigate();
   const [added, setAdded] = useState(false);
   useTitle(product?.name);
@@ -81,7 +83,31 @@ export default function ProductPage() {
             )}
           </div>
 
-          {product.limited && <LimitedCountdown id={product.id} />}
+          {product.limited && (
+            <>
+              <LimitedCountdown id={product.id} />
+              {signedIn ? (
+                isCollected(product.id) ? (
+                  <div className="collected-note">🏆 Caught — it's in your collection</div>
+                ) : (
+                  <button
+                    className="btn full collect-btn"
+                    onClick={() => {
+                      collectDrop(product.id);
+                      playPop();
+                      popConfetti(0.5, 0.4);
+                    }}
+                  >
+                    ✨ Collect this drop
+                  </button>
+                )
+              ) : (
+                <Link to="/account" className="btn full" style={{ marginBottom: 14 }}>
+                  🔒 Sign in to collect this drop
+                </Link>
+              )}
+            </>
+          )}
 
           <p style={{ fontWeight: 600, lineHeight: 1.5, color: "var(--ink-soft)" }}>
             {product.blurb}

@@ -3,9 +3,12 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../store/AuthContext";
 import { formatWindow } from "../lib/time";
 import { playConfirm } from "../lib/dopamine";
+import { products, productById } from "../data/products";
+import ProductImage from "../components/ProductImage";
 
 export default function Account() {
-  const { mode, signedIn, profile, history, startProfile, signInWithEmail, signOut } = useAuth();
+  const { mode, signedIn, profile, history, collected, startProfile, signInWithEmail, signOut } =
+    useAuth();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [sent, setSent] = useState(false);
@@ -126,6 +129,7 @@ export default function Account() {
 
   // ── Signed in ───────────────────────────────────────────────────────────
   const totalDaydreams = history.length;
+  const limitedTotal = products.filter((p) => p.limited).length;
   return (
     <>
       <Link to="/" className="back">← Back to the store</Link>
@@ -179,6 +183,45 @@ export default function Account() {
             Sign out
           </button>
         </div>
+      </div>
+
+      <div className="panel" style={{ marginTop: 22 }}>
+        <h2 className="section-title" style={{ marginTop: 0 }}>
+          🏆 Your drop collection
+          <span className="dw-chip" style={{ marginLeft: 10 }}>
+            {collected.length} / {limitedTotal} caught
+          </span>
+        </h2>
+        {collected.length === 0 ? (
+          <div className="empty" style={{ padding: "28px 10px" }}>
+            <div className="big">🗃️✨</div>
+            <p style={{ color: "var(--ink-soft)", fontWeight: 700 }}>
+              No drops caught yet. Find a <b>⏳ Limited</b> item and hit “Collect this drop” to
+              start your trophy case.
+            </p>
+            <Link to="/" className="btn primary">
+              Hunt for drops
+            </Link>
+          </div>
+        ) : (
+          <div className="collection-grid">
+            {collected.map((c) => {
+              const p = productById(c.product_id);
+              if (!p) return null;
+              return (
+                <Link to={`/p/${p.id}`} className="collect-card" key={c.product_id}>
+                  <div className="collect-thumb" style={{ background: p.bg }}>
+                    <ProductImage product={p} w={240} h={240} emojiSize={40} />
+                  </div>
+                  <div className="collect-name">{p.name}</div>
+                  <div className="tagline" style={{ fontSize: 11 }}>
+                    caught {new Date(c.collected_at).toLocaleDateString()}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </>
   );
