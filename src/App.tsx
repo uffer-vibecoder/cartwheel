@@ -9,6 +9,7 @@ import ProductPage from "./pages/Product";
 import CartPage from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Tracking from "./pages/Tracking";
+import About from "./pages/About";
 import Account from "./pages/Account";
 
 function Header() {
@@ -97,12 +98,24 @@ export default function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/tracking" element={<Tracking />} />
+          <Route path="/about" element={<About />} />
           <Route path="/account" element={<Account />} />
         </Routes>
       </main>
       <footer className="footer">
         <AdSlot seed={1} />
-        <div style={{ marginTop: 18 }}>
+        <nav style={{ marginTop: 20, display: "flex", gap: 18, justifyContent: "center", flexWrap: "wrap" }}>
+          <Link to="/about" style={{ fontWeight: 800, color: "var(--purple)" }}>
+            About
+          </Link>
+          <a
+            href="mailto:hello@trywhim.fun"
+            style={{ fontWeight: 800, color: "var(--purple)" }}
+          >
+            Contact
+          </a>
+        </nav>
+        <div style={{ marginTop: 14 }}>
           whim is a <b>dopamine store</b> — a joyful parody. Nothing is for sale, no card is
           charged, nothing ships. 💸
         </div>
